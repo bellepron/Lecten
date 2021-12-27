@@ -13,21 +13,25 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
     [SerializeField] Transform basketsBallTarget;
     [SerializeField] Transform goTransform;
 
-    // Control
+    [Header("Control")]
     private float m_previousX;
     public float deltaX = 0;
     public float swipeSensivity;
     bool updating;
 
-    // Shoot
-    float touchTimeStart, touchTimeFinish, timeInterval;
-
+    [Header("Shoot")]
     private float m_previousY;
     public float deltaY = 0;
     public float swipeSensivityY;
 
+    float touchTimeStart, touchTimeFinish, timeInterval;
+
+    [Header("Sounds")]
+    AudioSource audioSource;
+    [SerializeField] AudioClip bounceOnAsphalt_Sound;
+
     // Game
-    public bool canWin;
+    public bool isPointDetector0Triggered;
 
     // Particle
     [SerializeField] ParticleSystem dustParticle;
@@ -36,6 +40,8 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
     {
         _rb = this.GetComponent<Rigidbody>();
         _rb.constraints = RigidbodyConstraints.FreezeAll;
+        audioSource = GetComponent<AudioSource>();
+
         GameManager.Instance.Add_LevelStartObserver(this);
         GameManager.Instance.Add_WinObserver(this);
 
@@ -54,9 +60,10 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         {
             _velocity = Vector3.down * velocityMag;
             ReflectBall(_rb, other.contacts[0].normal);
-            dustParticle.transform.position = other.contacts[0].point;
-            dustParticle.transform.eulerAngles = new Vector3(-90, 0, 0);
-            dustParticle.Play();
+
+            DustParticlePlay(other);
+
+            audioSource.PlayOneShot(bounceOnAsphalt_Sound, 0.3f);
         }
         else
         {
@@ -69,6 +76,13 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         _velocity = Vector3.Reflect(_velocity, reflectVector);
         _rb.AddForce(_velocity, ForceMode.VelocityChange);
     }
+
+    void DustParticlePlay(Collision other)
+    {
+        dustParticle.transform.position = other.contacts[0].point;
+        dustParticle.transform.eulerAngles = new Vector3(-90, 0, 0);
+        dustParticle.Play();
+    }
     #endregion
 
     #region Point
@@ -76,19 +90,19 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
     {
         if (other.gameObject.layer == 6) // PointDetector0
         {
-            canWin = true;
+            isPointDetector0Triggered = true;
             StartCoroutine(PointProtection());
         }
         if (other.gameObject.layer == 7) // PointDetector1
         {
-            if (canWin)
+            if (isPointDetector0Triggered)
                 GameManager.Instance.Notify_WinObservers();
         }
     }
     IEnumerator PointProtection()
     {
         yield return new WaitForSeconds(0.4f);
-        canWin = false;
+        isPointDetector0Triggered = false;
     }
     #endregion
 
@@ -97,6 +111,7 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         yield return null;
         updating = true;
         _rb.constraints = RigidbodyConstraints.None;
+        _rb.AddTorque(new Vector3(Random.Range(-1, 1), Random.Range(-1, 1), Random.Range(-1, 1)));
 
         while (updating)
         {
@@ -210,7 +225,7 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
 
     public void EasyWin()
     {
-        transform.DOJump(basketsBallTarget.position, 1.2f, 1, 1).SetEase(Ease.Linear);
+        transform.DOJump(basketsBallTarget.position, 1.5f, 1, 1.5f).SetEase(Ease.InOutSine);
     }
 
     public void WinScenario()
