@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour, IWinObserver
 
     void Start()
     {
-        Physics.gravity = new Vector3(0, -9.5f, 0);
+        Physics.gravity = new Vector3(0, -9.8f, 0);
         Add_WinObserver(this);
     }
 
