@@ -4,14 +4,20 @@ using UnityEngine;
 using UnityEngine.Events;
 using DG.Tweening;
 
+[RequireComponent(typeof(BallThrow))]
 public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
 {
     private UnityAction behaviour;
+    [SerializeField] BallSettings ballSettings;
+
     private Rigidbody _rb;
     private Vector3 _velocity;
     [SerializeField] float velocityMag = 3;
     [SerializeField] Transform basketsBallTarget;
     [SerializeField] Transform goTransform;
+
+    [Header("Decision")]
+    float decisionPixel = 125.0f;
 
     [Header("Control")]
     private float m_previousX;
@@ -25,6 +31,10 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
     public float swipeSensivityY;
 
     float touchTimeStart, touchTimeFinish, timeInterval;
+    BallThrow ballThrow;
+
+    [Header("Shoot Adjustments")]
+
 
     [Header("Sounds")]
     AudioSource audioSource;
@@ -41,6 +51,7 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         _rb = this.GetComponent<Rigidbody>();
         _rb.constraints = RigidbodyConstraints.FreezeAll;
         audioSource = GetComponent<AudioSource>();
+        ballThrow = GetComponent<BallThrow>();
 
         GameManager.Instance.Add_LevelStartObserver(this);
         GameManager.Instance.Add_WinObserver(this);
@@ -141,12 +152,12 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
             deltaX = (Input.mousePosition.x - m_previousX);
             deltaY = (Input.mousePosition.y - m_previousY);
         }
-        if (deltaY > 150)
+        if (deltaY > decisionPixel)
         {
             behaviour -= ControlOrShoot;
             behaviour += Shoot;
         }
-        else if (Mathf.Abs(deltaX) > 150)
+        else if (Mathf.Abs(deltaX) > decisionPixel)
         {
             behaviour -= ControlOrShoot;
             behaviour += Control;
@@ -190,42 +201,40 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
 
         if (Input.GetMouseButtonUp(0))
         {
-            _rb.velocity = Vector3.zero;
             deltaY = Input.mousePosition.y - m_previousY;
-            // *
+            deltaY /= Screen.height * 2.5f;
+
             touchTimeFinish = Time.time;
             timeInterval = touchTimeFinish - touchTimeStart;
-            Vector3 horizontalDir = new Vector3(basketsBallTarget.position.x, 0, basketsBallTarget.position.z) - new Vector3(transform.position.x, 0, transform.position.z);
-            float distance = horizontalDir.magnitude;
-            Vector3 shootDir = (basketsBallTarget.position + new Vector3(0, 1.1f * distance, 0)) - transform.position;
 
-            // float multiply = deltaY * swipeSensivityY / timeInterval;
-
-            // if (multiply < 150)
-            //     multiply = 150;
-            // if (multiply > 500)
-            //     multiply = 500;
-            // Debug.Log(multiply);
-            float shootPower = distance * deltaY / 30;
-            if (shootPower < 400)
-                shootPower = 400;
-            if (shootPower > 610)
-                shootPower = 610;
-            Debug.Log(shootPower);
-
-            _rb.AddForce(shootDir.normalized * shootPower);
-            shootPower = 0;
+            ballThrow.Throw(CalculateShootPower(), basketsBallTarget, 1.5f);
 
             deltaY = 0;
+
             behaviour += ControlOrShoot;
             behaviour -= Shoot;
         }
     }
     #endregion
 
+    float CalculateShootPower()
+    {
+        // float shootPower = deltaY / timeInterval;
+        float shootPower = deltaY;
+        shootPower = Mathf.Clamp(shootPower, decisionPixel / Screen.height, 1.2f);
+
+        if (shootPower > (decisionPixel / Screen.height) && shootPower < 1.2f)
+        {
+            shootPower = 1;
+        }
+
+        Debug.Log(shootPower);
+        return shootPower;
+    }
+
     public void EasyWin()
     {
-        transform.DOJump(basketsBallTarget.position, 1.5f, 1, 1.5f).SetEase(Ease.InOutSine);
+        transform.DOJump(basketsBallTarget.position, 1.5f, 1, 1.5f).SetEase(Ease.OutSine);
     }
 
     public void WinScenario()
