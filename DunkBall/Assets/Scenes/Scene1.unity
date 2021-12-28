@@ -781,7 +781,7 @@ MonoBehaviour:
   isGlobal: 1
   priority: 0
   blendDistance: 0
-  weight: 1
+  weight: 0.72
   sharedProfile: {fileID: 11400000, guid: 10fc4df2da32a41aaa32d77bc913491c, type: 2}
 --- !u!4 &653260038
 Transform:
@@ -2008,10 +2008,30 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 354834315076385848, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
+      propertyPath: target
+      value: 
+      objectReference: {fileID: 669686986}
+    - target: {fileID: 354834315076385848, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 354834315076385848, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
+      propertyPath: timeToHit
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1806069673778377580, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1806069673778377580, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
       propertyPath: dustParticle
       value: 
       objectReference: {fileID: 344928894}
+    - target: {fileID: 1806069673778377580, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
+      propertyPath: swipeSensivityY
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1806069673778377580, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
       propertyPath: basketsBallTarget
       value: 
@@ -2063,6 +2083,10 @@ PrefabInstance:
     - target: {fileID: 8779831890803455245, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
       propertyPath: m_Name
       value: ball
+      objectReference: {fileID: 0}
+    - target: {fileID: 8779831890803455245, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
