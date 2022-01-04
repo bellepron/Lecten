@@ -6,7 +6,7 @@ public class BallThrow : MonoBehaviour
 {
     public void Throw(float power, Transform target, float arrivalTime)
     {
-        Vector3 requiredVelocity = RequiredInitialVelocity(target.position, arrivalTime) * power;
+        Vector3 requiredVelocity = RequiredInitialVelocity(target.position, arrivalTime);
         GetComponent<Rigidbody>().velocity = requiredVelocity;
     }
 
