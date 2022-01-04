@@ -127,7 +127,7 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         while (updating)
         {
             // goTransform.eulerAngles = Vector3.zero;
-            goTransform.LookAt(new Vector3(basketsBallTarget.position.x, 0, basketsBallTarget.position.z));
+            goTransform.LookAt(new Vector3(basketsBallTarget.position.x, transform.position.y, basketsBallTarget.position.z));
             behaviour.Invoke();
 
             yield return null;
@@ -175,18 +175,30 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
             deltaX = (Input.mousePosition.x - m_previousX);
             if (deltaX < 0)
             {
-                _rb.AddForce(goTransform.right * -swipeSensivity * Time.deltaTime, ForceMode.Impulse);
+                _rb.AddForce(goTransform.right * -swipeSensivity * Time.deltaTime, ForceMode.VelocityChange);
             }
             if (deltaX > 0)
             {
-                _rb.AddForce(goTransform.right * swipeSensivity * Time.deltaTime, ForceMode.Impulse);
+                _rb.AddForce(goTransform.right * swipeSensivity * Time.deltaTime, ForceMode.VelocityChange);
             }
             m_previousX = Input.mousePosition.x;
+
+            deltaY = (Input.mousePosition.y - m_previousY);
+            if (deltaY < 0)
+            {
+                _rb.AddForce(goTransform.forward * -swipeSensivity * Time.deltaTime, ForceMode.Acceleration);
+            }
+            if (deltaY > 0)
+            {
+                _rb.AddForce(goTransform.forward * swipeSensivity * Time.deltaTime, ForceMode.Acceleration);
+            }
+            m_previousY = Input.mousePosition.y;
         }
 
         if (Input.GetMouseButtonUp(0))
         {
             deltaX = 0;
+            deltaY = 0;
 
             behaviour += ControlOrShoot;
             behaviour -= Control;
