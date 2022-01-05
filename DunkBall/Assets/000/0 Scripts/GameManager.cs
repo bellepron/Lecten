@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public interface ILevelStartObserver
 {
@@ -22,6 +23,7 @@ public class GameManager : MonoBehaviour, IWinObserver
     [SerializeField] GameObject startPanel;
     [SerializeField] GameObject winPanel;
     [SerializeField] ParticleSystem fireworks0, fireworks1;
+    [SerializeField] TextMeshProUGUI scoreTMP;
 
     private void Awake()
     {
@@ -33,8 +35,10 @@ public class GameManager : MonoBehaviour, IWinObserver
 
     void Start()
     {
-        Physics.gravity = new Vector3(0, -9.8f, 0);
         Add_WinObserver(this);
+
+        Globals.score = PlayerPrefs.GetInt("score");
+        scoreTMP.text = Globals.score.ToString();
     }
 
     public void StartButton()
@@ -51,6 +55,8 @@ public class GameManager : MonoBehaviour, IWinObserver
     public void WinScenario()
     {
         StartCoroutine(DelayedWinPanel());
+        UpdateScore(1);
+
         fireworks0.Play();
         fireworks1.Play();
     }
@@ -61,6 +67,17 @@ public class GameManager : MonoBehaviour, IWinObserver
 
         winPanel.SetActive(true);
     }
+
+    public void UpdateScore(int value)
+    {
+        Globals.score += value;
+        PlayerPrefs.SetInt("score", Globals.score);
+        scoreTMP.text = Globals.score.ToString();
+    }
+
+
+
+    #region Observer Functions
 
     #region Level Start Observer
     public void Add_LevelStartObserver(ILevelStartObserver observer)
@@ -98,5 +115,7 @@ public class GameManager : MonoBehaviour, IWinObserver
                 observer.WinScenario();
         }
     }
+    #endregion
+
     #endregion
 }
