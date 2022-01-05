@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class BallThrow : MonoBehaviour
 {
-    public void Throw(float power, Transform target, float arrivalTime)
+    public void Throw(float power, Vector3 target, float arrivalTime)
     {
-        Vector3 requiredVelocity = RequiredInitialVelocity(target.position, arrivalTime);
+        Vector3 requiredVelocity = RequiredInitialVelocity(target, arrivalTime);
         GetComponent<Rigidbody>().velocity = requiredVelocity;
     }
 
