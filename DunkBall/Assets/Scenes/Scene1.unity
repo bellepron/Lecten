@@ -1923,11 +1923,11 @@ PrefabInstance:
       objectReference: {fileID: 1494814}
     - target: {fileID: 1806069673778377580, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
       propertyPath: swipeSensivity
-      value: 5
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 1806069673778377580, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
       propertyPath: swipeSensivityY
-      value: 5
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 1806069673778377580, guid: 82b3b6f9f61b90c43b9ad26da6beb0ce, type: 3}
       propertyPath: basketsBallTarget
