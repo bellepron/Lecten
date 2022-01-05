@@ -175,7 +175,7 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
                 _rb.AddForce(goTransform.forward * swipeSensivity * Time.deltaTime, ForceMode.Impulse);
             }
         }
-        Debug.Log(deltaY);
+
         if (Input.GetMouseButtonUp(0))
         {
             deltaX = 0;
@@ -206,13 +206,13 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
             // basketCollider.enabled = false;
 
             ballThrow.Throw(0, basketsBallTarget.position, 1.5f);
-            StartCoroutine(TakeControlBack(1.0f));
+            StartCoroutine(TakeControlBack(1.5f));
         }
         else
         {
             Vector3 target = transform.position + distanceV.normalized * 5f;
-            ballThrow.Throw(0, target, 1.0f);
-            StartCoroutine(TakeControlBack(1.0f));
+            ballThrow.Throw(0, target, 1.2f);
+            StartCoroutine(TakeControlBack(1.2f));
         }
     }
     #endregion
@@ -229,7 +229,16 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         updating = false;
 
         StartCoroutine(DecreaseVelocityMagnitude());
+
+        StartCoroutine(Stop());
     }
+
+    IEnumerator Stop()
+    {
+        yield return new WaitForSeconds(0.05f);
+        updating = false;
+    }
+
     IEnumerator DecreaseVelocityMagnitude()
     {
         bool a = true;
