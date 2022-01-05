@@ -1,13 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using DG.Tweening;
 
 [RequireComponent(typeof(BallThrow))]
 public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
 {
-    private UnityAction behaviour;
     [SerializeField] BallSettings ballSettings;
 
     private Rigidbody _rb;
@@ -32,6 +30,7 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
 
     float touchTimeStart, touchTimeFinish, timeInterval;
     BallThrow ballThrow;
+    [SerializeField] MeshCollider basketCollider;
 
     [Header("Shoot Adjustments")]
 
@@ -39,6 +38,7 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
     [Header("Sounds")]
     AudioSource audioSource;
     [SerializeField] AudioClip bounceOnAsphalt_Sound;
+    [SerializeField] AudioClip score_Sound;
 
     // Game
     public bool isPointDetector0Triggered;
@@ -55,12 +55,13 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
 
         GameManager.Instance.Add_LevelStartObserver(this);
         GameManager.Instance.Add_WinObserver(this);
-
-        behaviour += ControlOrShoot;
     }
 
     public void LevelStart()
     {
+        _rb.constraints = RigidbodyConstraints.None;
+        _rb.AddTorque(new Vector3(Random.Range(-1, 1), Random.Range(-1, 1), Random.Range(-1, 1)));
+
         StartCoroutine(MyUpdate());
     }
 
@@ -70,7 +71,8 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         if (other.gameObject.layer == 3) // Ground
         {
             _velocity = Vector3.down * velocityMag;
-            ReflectBall(_rb, other.contacts[0].normal);
+            // ReflectBall(_rb, other.contacts[0].normal);
+            _rb.AddForce(-1 * _velocity, ForceMode.VelocityChange);
 
             DustParticlePlay(other);
 
@@ -103,11 +105,17 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
         {
             isPointDetector0Triggered = true;
             StartCoroutine(PointProtection());
+            // basketCollider.enabled = true;
+            basketCollider.gameObject.transform.DOScale(new Vector3(1.3f, 1.1f, 1.3f), 0.1f).OnComplete(() =>
+                            basketCollider.gameObject.transform.DOScale(new Vector3(1.0f, 1.0f, 1.0f), 0.1f));
         }
         if (other.gameObject.layer == 7) // PointDetector1
         {
             if (isPointDetector0Triggered)
+            {
                 GameManager.Instance.Notify_WinObservers();
+            }
+            audioSource.PlayOneShot(score_Sound, 0.4f);
         }
     }
     IEnumerator PointProtection()
@@ -121,87 +129,65 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
     {
         yield return null;
         updating = true;
-        _rb.constraints = RigidbodyConstraints.None;
-        _rb.AddTorque(new Vector3(Random.Range(-1, 1), Random.Range(-1, 1), Random.Range(-1, 1)));
 
         while (updating)
         {
-            // goTransform.eulerAngles = Vector3.zero;
             goTransform.LookAt(new Vector3(basketsBallTarget.position.x, transform.position.y, basketsBallTarget.position.z));
-            behaviour.Invoke();
+            Control();
 
             yield return null;
         }
     }
 
-    #region Operation
-    private void ControlOrShoot()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            m_previousX = Input.mousePosition.x;
-            deltaX = 0;
-            m_previousY = Input.mousePosition.y;
-            deltaY = 0;
-            touchTimeStart = Time.time;
-        }
-        if (Input.GetMouseButton(0))
-        {
-            Debug.Log("Choosing");
 
-            deltaX = (Input.mousePosition.x - m_previousX);
-            deltaY = (Input.mousePosition.y - m_previousY);
-        }
-        if (deltaY > decisionPixel)
-        {
-            behaviour -= ControlOrShoot;
-            behaviour += Shoot;
-        }
-        else if (Mathf.Abs(deltaX) > decisionPixel)
-        {
-            behaviour -= ControlOrShoot;
-            behaviour += Control;
-        }
-    }
-    #endregion
+
 
     #region Control
     private void Control()
     {
-        Debug.Log("Controlling");
+        if (Input.GetMouseButtonDown(0))
+        {
+            m_previousX = Input.mousePosition.x;
+            m_previousY = Input.mousePosition.y;
+
+            touchTimeStart = Time.time;
+        }
 
         if (Input.GetMouseButton(0))
         {
             deltaX = (Input.mousePosition.x - m_previousX);
-            if (deltaX < 0)
+            if (deltaX < -30f)
             {
-                _rb.AddForce(goTransform.right * -swipeSensivity * Time.deltaTime, ForceMode.VelocityChange);
+                _rb.AddForce(goTransform.right * -swipeSensivity * Time.deltaTime, ForceMode.Impulse);
             }
-            if (deltaX > 0)
+            if (deltaX > 30f)
             {
-                _rb.AddForce(goTransform.right * swipeSensivity * Time.deltaTime, ForceMode.VelocityChange);
+                _rb.AddForce(goTransform.right * swipeSensivity * Time.deltaTime, ForceMode.Impulse);
             }
-            m_previousX = Input.mousePosition.x;
 
             deltaY = (Input.mousePosition.y - m_previousY);
-            if (deltaY < 0)
+            if (deltaY < -30f)
             {
-                _rb.AddForce(goTransform.forward * -swipeSensivity * Time.deltaTime, ForceMode.Acceleration);
+                _rb.AddForce(goTransform.forward * -swipeSensivity * Time.deltaTime, ForceMode.Impulse);
             }
-            if (deltaY > 0)
+            if (deltaY > 30f)
             {
-                _rb.AddForce(goTransform.forward * swipeSensivity * Time.deltaTime, ForceMode.Acceleration);
+                _rb.AddForce(goTransform.forward * swipeSensivity * Time.deltaTime, ForceMode.Impulse);
             }
-            m_previousY = Input.mousePosition.y;
         }
-
+        Debug.Log(deltaY);
         if (Input.GetMouseButtonUp(0))
         {
             deltaX = 0;
             deltaY = 0;
 
-            behaviour += ControlOrShoot;
-            behaviour -= Control;
+            touchTimeFinish = Time.time;
+            timeInterval = touchTimeFinish - touchTimeStart;
+
+            if (timeInterval < 0.2f)
+            {
+                Shoot();
+            }
         }
     }
     #endregion
@@ -209,44 +195,33 @@ public class BallController : MonoBehaviour, ILevelStartObserver, IWinObserver
     #region Shoot
     private void Shoot()
     {
-        Debug.Log("Shooting");
+        Debug.Log("Shoot");
 
-        if (Input.GetMouseButtonUp(0))
+        updating = false;
+        Vector3 distanceV = basketsBallTarget.position - transform.position;
+        distanceV.y = 0;
+
+        if (distanceV.magnitude < 9)
         {
-            deltaY = Input.mousePosition.y - m_previousY;
-            deltaY /= Screen.height * 2.5f;
+            // basketCollider.enabled = false;
 
-            touchTimeFinish = Time.time;
-            timeInterval = touchTimeFinish - touchTimeStart;
-
-            ballThrow.Throw(CalculateShootPower(), basketsBallTarget, 1.5f);
-
-            deltaY = 0;
-
-            behaviour += ControlOrShoot;
-            behaviour -= Shoot;
+            ballThrow.Throw(0, basketsBallTarget.position, 1.5f);
+            StartCoroutine(TakeControlBack(1.0f));
+        }
+        else
+        {
+            Vector3 target = transform.position + distanceV.normalized * 5f;
+            ballThrow.Throw(0, target, 1.0f);
+            StartCoroutine(TakeControlBack(1.0f));
         }
     }
     #endregion
 
-    float CalculateShootPower()
+    IEnumerator TakeControlBack(float time)
     {
-        // float shootPower = deltaY / timeInterval;
-        float shootPower = deltaY;
-        shootPower = Mathf.Clamp(shootPower, decisionPixel / Screen.height, 1.2f);
+        yield return new WaitForSeconds(time);
 
-        if (shootPower > (decisionPixel / Screen.height) && shootPower < 1.2f)
-        {
-            shootPower = 1;
-        }
-
-        Debug.Log(shootPower);
-        return shootPower;
-    }
-
-    public void EasyWin()
-    {
-        transform.DOJump(basketsBallTarget.position, 1.5f, 1, 1.5f).SetEase(Ease.OutSine);
+        StartCoroutine(MyUpdate());
     }
 
     public void WinScenario()
